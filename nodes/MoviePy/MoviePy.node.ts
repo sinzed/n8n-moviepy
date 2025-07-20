@@ -1,5 +1,6 @@
 import { IExecuteFunctions, INodeExecutionData, INodeType, INodeTypeDescription, NodeConnectionType } from 'n8n-workflow';
 import { exec } from "child_process";
+import { join } from 'path';
 
 export class MoviePy implements INodeType {
 	description: INodeTypeDescription = {
@@ -58,9 +59,13 @@ export class MoviePy implements INodeType {
 			const outputFilePath = this.getNodeParameter('outputFilePath', i) as string;
 
 			try {
-                const cutVideo = async (inputFilePath:string, startTime:number, endTime:number, outputFilePath:string) => {
+                const cutVideo = async (inputFilePath:string, startTime:number, endTime:number, outputFilePath:string) =>{
                     return new Promise((resolve, reject) => {
-                        let cmd = `python3 moviepy_cut.py "${inputFilePath}" "${startTime.toString()}" "${endTime.toString()}" ${outputFilePath}`
+                        // Get the directory where this node file is located
+                        const nodeDir = __dirname;
+                        const pythonScriptPath = join(nodeDir, 'moviepy_cut.py');
+                        
+                        let cmd = `python3 "${pythonScriptPath}" "${inputFilePath}" "${startTime.toString()}" "${endTime.toString()}" "${outputFilePath}"`
                         
                         exec(cmd, { maxBuffer: 1024 * 500 }, async (err, stdout, stderr) => {
                           if (err) {
