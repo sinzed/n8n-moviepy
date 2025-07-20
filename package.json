@@ -1,15 +1,15 @@
 {
   "name": "n8n-nodes-moviepy",
   "version": "0.1.0",
-  "description": "",
+  "description": "Comprehensive video manipulation node using MoviePy for n8n workflows",
   "keywords": [
     "n8n-community-node-package"
   ],
   "license": "MIT",
   "homepage": "",
   "author": {
-    "name": "",
-    "email": ""
+    "name": "n8n Community",
+    "email": "community@n8n.io"
   },
   "repository": {
     "type": "git",
@@ -38,7 +38,8 @@
     ],
     "nodes": [
       "dist/nodes/ExampleNode/ExampleNode.node.js",
-      "dist/nodes/HttpBin/HttpBin.node.js"
+      "dist/nodes/HttpBin/HttpBin.node.js",
+      "dist/nodes/MoviePy/MoviePy.node.js"
     ]
   },
   "devDependencies": {
