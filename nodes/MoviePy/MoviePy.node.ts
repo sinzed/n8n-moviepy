@@ -1,6 +1,7 @@
 import { IExecuteFunctions, INodeExecutionData, INodeType, INodeTypeDescription, NodeConnectionType, NodeOperationError } from 'n8n-workflow';
 import { exec } from "child_process";
 import { join } from 'path';
+const fetch = require('node-fetch');
 
 export class MoviePy implements INodeType {
 	description: INodeTypeDescription = {
@@ -433,6 +434,17 @@ export class MoviePy implements INodeType {
 					},
 				},
 			},
+			{
+				displayName: 'Execution Mode',
+				name: 'executionMode',
+				type: 'options',
+				options: [
+					{ name: 'Local', value: 'local' },
+					{ name: 'API', value: 'api' },
+				],
+				default: 'local',
+				description: 'Choose whether to run locally or via API',
+			},
 		],
 	};
 
@@ -443,6 +455,94 @@ export class MoviePy implements INodeType {
 		for (let i = 0; i < items.length; i++) {
 			const operation = this.getNodeParameter('operation', i) as string;
 			const outputFilePath = this.getNodeParameter('outputFilePath', i) as string;
+			const executionMode = this.getNodeParameter('executionMode', i) as string;
+
+			if (executionMode === 'api') {
+				const apiUrl = 'https://your-fixed-api-url.com/endpoint'; // Set a fixed API URL
+				// Build payload from node parameters
+				const payload: any = { operation, outputFilePath };
+				// Add operation-specific parameters
+				switch (operation) {
+					case 'cut':
+						payload.inputFilePath = this.getNodeParameter('inputFilePath', i) as string;
+						payload.startTime = this.getNodeParameter('startTime', i) as number;
+						payload.endTime = this.getNodeParameter('endTime', i) as number;
+						break;
+					case 'resize':
+						payload.inputFilePath = this.getNodeParameter('inputFilePath', i) as string;
+						payload.width = this.getNodeParameter('width', i) as number;
+						payload.height = this.getNodeParameter('height', i) as number;
+						break;
+					case 'rotate':
+						payload.inputFilePath = this.getNodeParameter('inputFilePath', i) as string;
+						payload.angle = this.getNodeParameter('angle', i) as number;
+						break;
+					case 'addText':
+						payload.inputFilePath = this.getNodeParameter('inputFilePath', i) as string;
+						payload.text = this.getNodeParameter('text', i) as string;
+						payload.fontSize = this.getNodeParameter('fontSize', i) as number;
+						payload.color = this.getNodeParameter('color', i) as string;
+						payload.position = this.getNodeParameter('position', i) as string;
+						if (payload.position === 'custom') {
+							payload.xPosition = this.getNodeParameter('xPosition', i) as number;
+							payload.yPosition = this.getNodeParameter('yPosition', i) as number;
+						}
+						break;
+					case 'addAudio':
+						payload.inputFilePath = this.getNodeParameter('inputFilePath', i) as string;
+						payload.audioFilePath = this.getNodeParameter('audioFilePath', i) as string;
+						break;
+					case 'concatenate':
+						payload.inputFilePaths = this.getNodeParameter('inputFilePaths', i) as string;
+						break;
+					case 'speed':
+						payload.inputFilePath = this.getNodeParameter('inputFilePath', i) as string;
+						payload.speedFactor = this.getNodeParameter('speedFactor', i) as number;
+						break;
+					case 'extractAudio':
+						payload.inputFilePath = this.getNodeParameter('inputFilePath', i) as string;
+						break;
+					case 'fade':
+						payload.inputFilePath = this.getNodeParameter('inputFilePath', i) as string;
+						payload.fadeType = this.getNodeParameter('fadeType', i) as string;
+						payload.fadeDuration = this.getNodeParameter('fadeDuration', i) as number;
+						break;
+					case 'crop':
+						payload.inputFilePath = this.getNodeParameter('inputFilePath', i) as string;
+						payload.cropX = this.getNodeParameter('cropX', i) as number;
+						payload.cropY = this.getNodeParameter('cropY', i) as number;
+						payload.cropWidth = this.getNodeParameter('cropWidth', i) as number;
+						payload.cropHeight = this.getNodeParameter('cropHeight', i) as number;
+						break;
+					case 'watermark':
+						payload.inputFilePath = this.getNodeParameter('inputFilePath', i) as string;
+						payload.watermarkPath = this.getNodeParameter('watermarkPath', i) as string;
+						payload.watermarkPosition = this.getNodeParameter('watermarkPosition', i) as string;
+						break;
+					case 'gif':
+						payload.inputFilePath = this.getNodeParameter('inputFilePath', i) as string;
+						payload.gifDuration = this.getNodeParameter('gifDuration', i) as number;
+						payload.gifFps = this.getNodeParameter('gifFps', i) as number;
+						break;
+					default:
+						throw new NodeOperationError(this.getNode(), `Unknown operation: ${operation}`);
+				}
+				try {
+					const response = await fetch(apiUrl, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(payload),
+					});
+					if (!response.ok) {
+						throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+					}
+					const result = await response.json();
+					returnData.push({ json: { success: true, operation, apiResult: result } });
+				} catch (error: any) {
+					returnData.push({ json: { success: false, operation, error: error.message } });
+				}
+				continue;
+			}
 
 			try {
 				const nodeDir = __dirname;
