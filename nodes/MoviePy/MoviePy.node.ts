@@ -24,6 +24,17 @@ export class MoviePy implements INodeType {
 		],
 		properties: [
 			{
+				displayName: 'Execution Mode',
+				name: 'executionMode',
+				type: 'options',
+				options: [
+					{ name: 'Local', value: 'local' },
+					{ name: 'API', value: 'api' },
+				],
+				default: 'local',
+				description: 'Choose whether to run locally or via API',
+			},
+			{
 				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
@@ -439,17 +450,6 @@ export class MoviePy implements INodeType {
 						operation: ['gif'],
 					},
 				},
-			},
-			{
-				displayName: 'Execution Mode',
-				name: 'executionMode',
-				type: 'options',
-				options: [
-					{ name: 'Local', value: 'local' },
-					{ name: 'API', value: 'api' },
-				],
-				default: 'local',
-				description: 'Choose whether to run locally or via API',
 			},
 		],
 	};
