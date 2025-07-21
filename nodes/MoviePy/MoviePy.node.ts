@@ -16,6 +16,12 @@ export class MoviePy implements INodeType {
 		},
 		inputs: [NodeConnectionType.Main],
 		outputs: [NodeConnectionType.Main],
+		credentials: [
+			{
+				name: 'moviePyApi',
+				required: true,
+			},
+		],
 		properties: [
 			{
 				displayName: 'Operation',
@@ -459,6 +465,8 @@ export class MoviePy implements INodeType {
 
 			if (executionMode === 'api') {
 				const apiUrl = 'https://your-fixed-api-url.com/endpoint'; // Set a fixed API URL
+				const credentials = await this.getCredentials('moviePyApi') as { apiKey: string };
+				const apiKey = credentials.apiKey;
 				// Build payload from node parameters
 				const payload: any = { operation, outputFilePath };
 				// Add operation-specific parameters
@@ -530,7 +538,10 @@ export class MoviePy implements INodeType {
 				try {
 					const response = await fetch(apiUrl, {
 						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
+						headers: {
+							'Content-Type': 'application/json',
+							...(apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {}),
+						},
 						body: JSON.stringify(payload),
 					});
 					if (!response.ok) {
