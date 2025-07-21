@@ -473,17 +473,46 @@ export class MoviePy implements INodeType {
 						cmd = `python3 "${pythonScriptPath}" "${rotateInputPath}" "${angle.toString()}" "${outputFilePath}"`;
 						break;
 
-					case 'addText':
-						const textInputPath = this.getNodeParameter('inputFilePath', i) as string;
-						const text = this.getNodeParameter('text', i) as string;
-						const fontSize = this.getNodeParameter('fontSize', i) as number;
-						const color = this.getNodeParameter('color', i) as string;
-						const position = this.getNodeParameter('position', i) as string;
-						const xPosition = this.getNodeParameter('xPosition', i) as number;
-						const yPosition = this.getNodeParameter('yPosition', i) as number;
+					case 'addText': {
+						const getParam = (name: string) => {
+							try {
+								return this.getNodeParameter(name, i);
+							} catch (e) {
+								throw new NodeOperationError(this.getNode(), `Missing parameter: ${name}`);
+							}
+						};
+						let textInputPath, text, fontSize, color, position, xPosition, yPosition, outputFilePath;
+						try {
+							textInputPath = getParam('inputFilePath') as string;
+							text = getParam('text') as string;
+							fontSize = getParam('fontSize') as number;
+							color = getParam('color') as string;
+							position = getParam('position') as string;
+							if (position === 'custom') {
+								xPosition = getParam('xPosition') as number;
+								yPosition = getParam('yPosition') as number;
+							} else {
+								xPosition = 0;
+								yPosition = 0;
+							}
+							outputFilePath = getParam('outputFilePath') as string;
+						} catch (error: any) {
+							returnData.push({ json: { success: false, operation, error: error.message, params: {
+								inputFilePath: this.getNodeParameter('inputFilePath', i, false),
+								text: this.getNodeParameter('text', i, false),
+								fontSize: this.getNodeParameter('fontSize', i, false),
+								color: this.getNodeParameter('color', i, false),
+								position: this.getNodeParameter('position', i, false),
+								xPosition: this.getNodeParameter('xPosition', i, false),
+								yPosition: this.getNodeParameter('yPosition', i, false),
+								outputFilePath: this.getNodeParameter('outputFilePath', i, false),
+							}} });
+							continue;
+						}
 						pythonScriptPath = join(nodeDir, 'moviepy_add_text.py');
 						cmd = `python3 "${pythonScriptPath}" "${textInputPath}" "${text}" "${fontSize.toString()}" "${color}" "${position}" "${xPosition.toString()}" "${yPosition.toString()}" "${outputFilePath}"`;
 						break;
+					}
 
 					case 'addAudio':
 						const audioInputPath = this.getNodeParameter('inputFilePath', i) as string;
@@ -561,12 +590,11 @@ export class MoviePy implements INodeType {
 					});
 				});
 				returnData.push({ json: { success: true, operation, outputFilePath } });
-			} catch (error) {
+			} catch (error: any) {
 				returnData.push({ json: { success: false, operation, error: error.message } });
 			}
 		}
 		return [returnData];
 	}
 
-
-} 
+}
